@@ -119,14 +119,14 @@ def _apply_affine_transformation(x, mat, up=4, **filter_kwargs):
 class Renderer:
     def __init__(self):
         self._device        = torch.device('cuda')
-        self._pkl_data      = dict()    # {pkl: dict | CapturedException, ...}
-        self._networks      = dict()    # {cache_key: torch.nn.Module, ...}
-        self._pinned_bufs   = dict()    # {(shape, dtype): torch.Tensor, ...}
-        self._cmaps         = dict()    # {name: torch.Tensor, ...}
+        self._pkl_data = {}
+        self._networks = {}
+        self._pinned_bufs = {}
+        self._cmaps = {}
         self._is_timing     = False
         self._start_event   = torch.cuda.Event(enable_timing=True)
         self._end_event     = torch.cuda.Event(enable_timing=True)
-        self._net_layers    = dict()    # {cache_key: [dnnlib.EasyDict, ...], ...}
+        self._net_layers = {}
 
     def render(self, **args):
         self._is_timing = True
@@ -280,8 +280,7 @@ class Renderer:
 
         # Calculate final W.
         w = torch.stack([all_ws[seed] * weight for seed, weight in w0_seeds]).sum(dim=0, keepdim=True)
-        stylemix_idx = [idx for idx in stylemix_idx if 0 <= idx < G.num_ws]
-        if len(stylemix_idx) > 0:
+        if stylemix_idx := [idx for idx in stylemix_idx if 0 <= idx < G.num_ws]:
             w[:, stylemix_idx] = all_ws[stylemix_seed][np.newaxis, stylemix_idx]
         w += w_avg
 
